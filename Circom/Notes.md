@@ -4,12 +4,13 @@ Circom was created to address two major issues in developing constraint systems 
 1) Manually designing constraint systems is tedious and error-prone, especially when dealing with large-scale or repetitive constraints.
 2) Populating the witness is equally challenging and requires manual computation of intermediary values that could otherwise be derived programmatically.
 
-Thus, Circom 1) simplifies constraint design and 2) automates witness population.
+Thus, Circom:
+
+  1) Simplifies constraint design  
+  2) Automates witness population.
 
 ### Working:
-
-#### The advantage of <== assign and constrain in Circom
-Circom further simplifies the witness population through its “assign and constrain” operator <==
+Circom further simplifies the witness population through its “assign and constrain” operator `<==`
 
 Suppose we have the constraint:
         `z === x * y`
@@ -58,3 +59,37 @@ The following should be obvious to the reader:
 - `p` under `mod p` is congruent to `0`;
 - `p-1` is the largest integer in the `finite field` `mod p`.
 - Passing values that are larger than `p-1` will result in overflow.
+
+### Circom in the command line
+
+### 1. Compiling Circuits
+
+Execute the following command to compile: `circom somecircuit.circom --r1cs --sym --wasm`
+
+- The `--r1cs` flag means to output an r1cs file. 
+  - This file contains the circuit’s R1CS system of constraints in binary format.
+  - Can be used with different tool stacks to construct proving/verifying statements (e.g. snarkjs, libsnark).
+  - Running `snarkjs r1cs print somecircuit.r1cs`, we'll get a human-readable output:
+
+- The `--sym flag` gives the variables a human-readable name. This file is a symbols file generated during compilation. This file is essential because:
+  - It maps human-readable variable names to their corresponding positions in the R1CS for debugging.
+  - It helps in printing the constraint system in a more understandable format, making it easier to verify and debug your circuit.
+
+- The `-wasm` is for generating wasm code to populate the witness of the R1CS, given an input JSON.
+
+### 2. Calculating the Witness
+
+- To generate the witness, we must supply the public input values for the circuit. We do this by creating an `inputs.json` file in the `somecircuit_js` directory.
+
+- Say we want to create a witness for input values `a=1`, `b=2`, `c=2`. The JSON file would be like so:
+
+- `{"a": "1","b": "2","c": "2"}`
+
+- Circom expects strings instead of numbers because JavaScript does not work accurately with integers larger than (source).
+
+- Run this command in the somecircuit_js directory: `node generate_witness.js **somecircuit.wasm** inputs.json witness.wtns` (in the `somecircuit_js directory`)
+
+- Now that `witness.wtns` has been created, export it to JSON, so we can examine it: `snarkjs wtns export json witness.wtns`
+
+- We would get an output on executing the witness.json.
+
